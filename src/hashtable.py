@@ -1,6 +1,9 @@
 # '''
 # Linked List hash table key/value pair
 # '''
+
+import hashlib
+
 class LinkedPair:
     def __init__(self, key, value):
         self.key = key
@@ -15,6 +18,7 @@ class HashTable:
     def __init__(self, capacity):
         self.capacity = capacity  # Number of buckets in the hash table
         self.storage = [None] * capacity
+        self.stored = 0
 
 
     def _hash(self, key):
@@ -51,9 +55,37 @@ class HashTable:
 
         Fill this in.
         '''
-        pass
 
 
+        # code for automatic resizing
+        # # if storage is full, resize hash table
+        # if self.stored == self.capacity:
+        #     self.resize()
+
+        # if a value for this key already exists, delete it before adding new value
+        if self.retrieve(key) != None:
+            self.remove(key)
+        
+        # increment storage counter
+        self.stored += 1
+
+        # get index
+        index = self._hash_mod(key)
+
+        # check if index is already filled
+        if self.storage[index] != None:
+            # finding end node
+            node = self.storage[index]
+            while node.next is not None:
+                node = node.next
+            
+            # adding LinkedPair to end of index list
+            node.next = LinkedPair(key, value)
+
+        # if not, add item to list
+        else:
+            self.storage[index] = LinkedPair(key, value)
+            
 
     def remove(self, key):
         '''
@@ -63,7 +95,33 @@ class HashTable:
 
         Fill this in.
         '''
-        pass
+
+        index = self._hash_mod(key)
+
+        try:
+            node = self.storage[index]
+            prev = None
+
+            # finding right node to remove and nodes around it
+            while node:
+                next = node.next
+                if node.key == key:
+                    break
+                prev = node
+            
+                node = node.next
+            
+            # removing node from list
+            if prev:
+                prev.next = next
+            
+            else:
+                self.storage[index] = None
+
+            self.stored -= 1
+        
+        except:
+            print('index not found')
 
 
     def retrieve(self, key):
@@ -74,8 +132,16 @@ class HashTable:
 
         Fill this in.
         '''
-        pass
 
+        index = self._hash_mod(key)
+        node = self.storage[index]
+
+        while node:
+            if node.key == key:
+                return node.value
+            node = node.next
+        
+        return None
 
     def resize(self):
         '''
@@ -84,10 +150,24 @@ class HashTable:
 
         Fill this in.
         '''
-        pass
+        # doubling capacity
+        self.capacity = self.capacity*2
 
+        # saving existing storage and creating new blank storage
+        old_storage = []
 
+        for node in self.storage:
+            while node:
+                old_storage.append((node.key, node.value))
+                node = node.next
 
+        self.storage = [None]*self.capacity
+        
+        # adding each element from old storage to new storage
+        self.stored = 0
+        for pair in old_storage:
+            self.insert(pair[0], pair[1])
+        
 if __name__ == "__main__":
     ht = HashTable(2)
 
